@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -107,32 +108,30 @@ func CreateTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
 }
 
 func GetTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
-
-	var taskId int
-	var task Task
-
-	err := json.Decoder(r.Body).Decode(&taskId)
-
+	vars := mux.Vars(r)
+	taskID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		http.Error(w, "Failed to parse request body", http.StatusBadRequest)
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
 		return
 	}
 
-	// Perform any necessary validation on the task data
-	if taskId == 0 {
-		http.Error(w, "Task id is required", http.StatusBadRequest)
-		return
-	}
-
-	// Save the task to the storage or database
-	task, err = storage.GetTask(&taskId)
+	task, err := storage.GetTask(taskID)
 	if err != nil {
-		http.Error(w, "Failed to create task", http.StatusInternalServerError)
+		http.Error(w, "Failed to retrieve task", http.StatusInternalServerError)
 		return
 	}
 
-	// Set the response status to 201 Created
-	w.WriteHeader(http.StatusCreated)
+	// Set the response content type to JSON
+	w.Header().Set("Content-Type", "application/json")
+
+	// Convert task to JSON
+	jsonData, err := json.Marshal(task)
+	if err != nil {
+		http.Error(w, "Failed to serialize task", http.StatusInternalServerError)
+		return
+	}
+
+	// Write the JSON response
 	w.Write(jsonData)
 }
 

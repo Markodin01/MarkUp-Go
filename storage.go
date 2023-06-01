@@ -60,13 +60,11 @@ func (s *Storage) CreateTask(task *Task) error {
 	return nil
 }
 
-func (s *Storage) GetTask(id int) error {
-
+func (s *Storage) GetTask(id int) (Task, error) {
 	var task Task
-	result := s.db.First(id, &task)
+	result := s.db.First(&task, id)
 	if result.Error != nil {
-		return nil, result.Error
+		return Task{}, result.Error
 	}
 	return task, nil
-
 }
