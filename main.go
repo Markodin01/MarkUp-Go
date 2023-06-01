@@ -57,7 +57,7 @@ func main() {
 
 }
 
-// Define your endpoint handlers
+// Defining endpoint handlers
 
 func UpdateTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
 	// Parse the request body to get the task data
@@ -171,4 +171,21 @@ func GetTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
 }
 
 func DeleteTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
+
+	var task Task
+
+	vars := mux.Vars(r)
+	taskID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
+		return
+	}
+
+	err = storage.DeleteTask(&task, taskID)
+	if err != nil {
+		http.Error(w, "Failed to delete task", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
 }

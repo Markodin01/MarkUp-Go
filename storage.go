@@ -76,3 +76,11 @@ func (s *Storage) UpdateTask(task *Task, taskId int) error {
 	}
 	return nil
 }
+
+func (s *Storage) DeleteTask(task *Task, taskId int) error {
+	result := s.db.Delete(&Task{}, taskId)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
