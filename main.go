@@ -8,8 +8,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var storage *Storage
-
 func main() {
 	connStr := "host=localhost port=5432 user=postgres password=12345 dbname=marekgaj sslmode=disable"
 
@@ -29,27 +27,27 @@ func main() {
 
 	// Define your endpoints
 	router.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
-		tasks, err := storage.GetAllTasks()
-		if err != nil {
-			http.Error(w, "Failed to retrieve tasks", http.StatusInternalServerError)
-			return
+		switch r.Method {
+		case http.MethodGet:
+			GetAllTasks(w, r, storage)
+		case http.MethodPost:
+			CreateTask(w, r, storage)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
+	}).Methods("GET", "POST")
 
-		// Convert tasks to JSON and write the response
-		jsonData, err := json.Marshal(tasks)
-		if err != nil {
-			http.Error(w, "Failed to marshal tasks", http.StatusInternalServerError)
-			return
+	router.HandleFunc("/tasks/{id}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			GetTask(w, r, storage)
+		case http.MethodPut:
+			UpdateTask(w, r, storage)
+		case http.MethodDelete:
+			DeleteTask(w, r, storage)
+
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonData)
-	}).Methods("GET")
-
-	router.HandleFunc("/tasks", CreateTask).Methods("POST")
-	router.HandleFunc("/tasks/{id}", GetTask).Methods("GET")
-	router.HandleFunc("/tasks/{id}", UpdateTask).Methods("PUT")
-	router.HandleFunc("/tasks/{id}", DeleteTask).Methods("DELETE")
+	})
 
 	// Start the server on port 8080
 	log.Fatal(http.ListenAndServe(":8080", router))
@@ -59,11 +57,15 @@ func main() {
 
 // Define your endpoint handlers
 
-func GetTasks(w http.ResponseWriter, r *http.Request) {
+func GetAllTasks(w http.ResponseWriter, r *http.Request, storage *Storage) {
 	// Retrieve tasks from your storage or database
 	tasks, err := storage.GetAllTasks()
+	if err != nil {
+		// Handle the error and return an appropriate response
+		http.Error(w, "Failed to retrieve tasks", http.StatusInternalServerError)
+		return
+	}
 
-	// Set the response content type to JSON
 	w.Header().Set("Content-Type", "application/json")
 
 	// Convert tasks to JSON
@@ -78,40 +80,68 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
-func CreateTask(w http.ResponseWriter, r *http.Request) {
-	// Handle the POST /tasks endpoint
-	// ...
+func CreateTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
+	// Parse the request body to get the task data
+	var task Task
+	err := json.NewDecoder(r.Body).Decode(&task)
+	if err != nil {
+		http.Error(w, "Failed to parse request body", http.StatusBadRequest)
+		return
+	}
+
+	// Perform any necessary validation on the task data
+	if task.Title == "" {
+		http.Error(w, "Task title is required", http.StatusBadRequest)
+		return
+	}
+
+	// Save the task to the storage or database
+	err = storage.CreateTask(&task)
+	if err != nil {
+		http.Error(w, "Failed to create task", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the response status to 201 Created
+	w.WriteHeader(http.StatusCreated)
 }
 
-func GetTask(w http.ResponseWriter, r *http.Request) {
-	// Handle the GET /tasks/{id} endpoint
-	// ...
+func GetTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
+
+	var taskId int
+	var task Task
+
+	err := json.Decoder(r.Body).Decode(&taskId)
+
+	if err != nil {
+		http.Error(w, "Failed to parse request body", http.StatusBadRequest)
+		return
+	}
+
+	// Perform any necessary validation on the task data
+	if taskId == 0 {
+		http.Error(w, "Task id is required", http.StatusBadRequest)
+		return
+	}
+
+	// Save the task to the storage or database
+	task, err = storage.GetTask(&taskId)
+	if err != nil {
+		http.Error(w, "Failed to create task", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the response status to 201 Created
+	w.WriteHeader(http.StatusCreated)
+	w.Write(jsonData)
 }
 
-func UpdateTask(w http.ResponseWriter, r *http.Request) {
+func UpdateTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
 	// Handle the PUT /tasks/{id} endpoint
 	// ...
 }
 
-func DeleteTask(w http.ResponseWriter, r *http.Request) {
+func DeleteTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
 	// Handle the DELETE /tasks/{id} endpoint
 	// ...
-}
-
-func foo(w http.ResponseWriter, r *http.Request) {
-	response := map[string]interface{}{
-		"message": "hello",
-	}
-
-	jsonResponse, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, "Failed to create JSON response", http.StatusInternalServerError)
-		w.WriteHeader(http.StatusFailedDependency)
-
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK) // Set the HTTP status code to 200
-	w.Write(jsonResponse)
 }

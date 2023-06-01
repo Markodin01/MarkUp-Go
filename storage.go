@@ -1,15 +1,13 @@
 package main
 
 import (
-	"gorm.io/gorm"
 	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
-
 
 type Storage struct {
 	db *gorm.DB
 }
-
 
 func NewStorage(connStr string) (*Storage, error) {
 	db, err := gorm.Open(postgres.Open(connStr), &gorm.Config{})
@@ -27,12 +25,12 @@ func (s *Storage) Close() error {
 	if err != nil {
 		return err
 	}
-	
+
 	err = db.Close()
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -41,7 +39,7 @@ func (s *Storage) AutoMigrate() error {
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -54,3 +52,21 @@ func (s *Storage) GetAllTasks() ([]Task, error) {
 	return tasks, nil
 }
 
+func (s *Storage) CreateTask(task *Task) error {
+	result := s.db.Create(task)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (s *Storage) GetTask(id int) error {
+
+	var task Task
+	result := s.db.First(id, &task)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return task, nil
+
+}
