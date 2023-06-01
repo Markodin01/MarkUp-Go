@@ -1,9 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
-	"encoding/json"
+
 	"github.com/gorilla/mux"
 )
 
@@ -27,7 +28,24 @@ func main() {
 	router := mux.NewRouter()
 
 	// Define your endpoints
-	router.HandleFunc("/tasks", GetTasks).Methods("GET")
+	router.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
+		tasks, err := storage.GetAllTasks()
+		if err != nil {
+			http.Error(w, "Failed to retrieve tasks", http.StatusInternalServerError)
+			return
+		}
+
+		// Convert tasks to JSON and write the response
+		jsonData, err := json.Marshal(tasks)
+		if err != nil {
+			http.Error(w, "Failed to marshal tasks", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonData)
+	}).Methods("GET")
+
 	router.HandleFunc("/tasks", CreateTask).Methods("POST")
 	router.HandleFunc("/tasks/{id}", GetTask).Methods("GET")
 	router.HandleFunc("/tasks/{id}", UpdateTask).Methods("PUT")
@@ -35,6 +53,7 @@ func main() {
 
 	// Start the server on port 8080
 	log.Fatal(http.ListenAndServe(":8080", router))
+	print("The sever started")
 
 }
 
@@ -77,4 +96,22 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	// Handle the DELETE /tasks/{id} endpoint
 	// ...
+}
+
+func foo(w http.ResponseWriter, r *http.Request) {
+	response := map[string]interface{}{
+		"message": "hello",
+	}
+
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, "Failed to create JSON response", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusFailedDependency)
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // Set the HTTP status code to 200
+	w.Write(jsonResponse)
 }
