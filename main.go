@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -57,6 +58,39 @@ func main() {
 }
 
 // Define your endpoint handlers
+
+func UpdateTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
+	// Parse the request body to get the task data
+	var task Task
+	vars := mux.Vars(r)
+	taskID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
+		return
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&task)
+	if err != nil {
+		http.Error(w, "Failed to parse request body", http.StatusBadRequest)
+		return
+	}
+
+	// Perform any necessary validation on the task data
+	if task.Title == "" {
+		http.Error(w, "Task title is required", http.StatusBadRequest)
+		return
+	}
+
+	// Save the task to the storage or database
+	err = storage.UpdateTask(&task, taskID)
+	if err != nil {
+		http.Error(w, "Failed to create task", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the response status to 201 Created
+	w.WriteHeader(http.StatusCreated)
+}
 
 func GetAllTasks(w http.ResponseWriter, r *http.Request, storage *Storage) {
 	// Retrieve tasks from your storage or database
@@ -133,14 +167,8 @@ func GetTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
 
 	// Write the JSON response
 	w.Write(jsonData)
-}
-
-func UpdateTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
-	// Handle the PUT /tasks/{id} endpoint
-	// ...
+	fmt.Printf("GET /tasks/%d - Status: %d\n", taskID, http.StatusOK)
 }
 
 func DeleteTask(w http.ResponseWriter, r *http.Request, storage *Storage) {
-	// Handle the DELETE /tasks/{id} endpoint
-	// ...
 }

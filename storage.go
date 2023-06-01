@@ -68,3 +68,11 @@ func (s *Storage) GetTask(id int) (Task, error) {
 	}
 	return task, nil
 }
+
+func (s *Storage) UpdateTask(task *Task, taskId int) error {
+	result := s.db.Model(&Task{}).Where("id = ?", taskId).Updates(task)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
