@@ -52,8 +52,8 @@ func main() {
 	})
 
 	// Start the server on port 8080
-	log.Fatal(http.ListenAndServe(":8080", router))
 	print("The sever started")
+	log.Fatal(http.ListenAndServe(":8080", router))
 
 }
 
