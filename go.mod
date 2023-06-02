@@ -1,4 +1,4 @@
-module task_manager
+module interface
 
 go 1.20
 

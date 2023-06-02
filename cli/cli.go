@@ -12,7 +12,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 type Task struct {
@@ -48,11 +47,6 @@ func init() {
 
 	// Define flags using Viper
 	createCmd.Flags().StringP("category", "c", "", "Set the task category")
-
-	// Bind flags to configuration
-	viper.BindPFlag("category", createCmd.Flags().Lookup("category"))
-	category := viper.GetString("category")
-	fmt.Printf("Task category: %s\n", category)
 
 }
 
