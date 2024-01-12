@@ -11,14 +11,6 @@ To install MarkUp-Go, follow these steps:
 1. [go get -u github.com/Markodin01/MarkUpGo]
 2. [import github.com/Markodin01/MarkUpGo]
 
-## Usage
-
-To use MarkUp-Go, follow these steps:
-
-1. [Usage step 1]
-2. [Usage step 2]
-3. [Usage step 3]
-
 ## Contributing
 
 To contribute to MarkUp-Go, follow these steps:
@@ -32,7 +24,7 @@ To contribute to MarkUp-Go, follow these steps:
 
 ## License
 
-This project uses the following license: [license_name](link).
+This project uses the following license: [MIT](link).
 
 ## Contact
 
