@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-	connStr := "host=localhost port=5432 user=postgres password=12345 dbname=marekgaj sslmode=disable"
 
 	storage, err := NewStorage(connStr)
 	if err != nil {
